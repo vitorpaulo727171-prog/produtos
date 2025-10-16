@@ -108,7 +108,7 @@ try {
 <head>
     <title>Admin - Mercado Sabores</title>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <style>
         * {
             margin: 0;
@@ -117,40 +117,49 @@ try {
         }
         
         body { 
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif; 
             margin: 0;
-            padding: 20px; 
+            padding: 15px; 
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             min-height: 100vh;
+            -webkit-text-size-adjust: 100%;
+            -webkit-tap-highlight-color: transparent;
         }
         
         .container { 
-            max-width: 1200px; 
+            max-width: 100%; 
             margin: 0 auto; 
             background: white; 
-            padding: 30px; 
-            border-radius: 15px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            padding: 20px; 
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.15);
         }
         
         .header {
             text-align: center;
-            margin-bottom: 30px;
-            padding-bottom: 20px;
-            border-bottom: 2px solid #e9ecef;
+            margin-bottom: 25px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid #e9ecef;
         }
         
         .header h1 {
             color: #333;
-            font-size: 2.5em;
-            margin-bottom: 10px;
+            font-size: 1.8rem;
+            margin-bottom: 8px;
+            line-height: 1.2;
+        }
+        
+        .header p {
+            color: #666;
+            font-size: 0.9rem;
         }
         
         .alert {
-            padding: 15px;
-            margin-bottom: 20px;
+            padding: 12px 15px;
+            margin-bottom: 15px;
             border-radius: 8px;
             font-weight: 500;
+            font-size: 0.9rem;
         }
         
         .alert.success {
@@ -167,37 +176,39 @@ try {
         
         .form-section {
             background: #f8f9fa;
-            padding: 25px;
-            border-radius: 10px;
-            margin-bottom: 30px;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
             border: 1px solid #e9ecef;
         }
         
         .form-section h2 {
             color: #495057;
-            margin-bottom: 20px;
-            font-size: 1.5em;
+            margin-bottom: 15px;
+            font-size: 1.3rem;
         }
         
         .form-group { 
-            margin: 15px 0; 
+            margin: 12px 0; 
         }
         
         .form-group label {
             display: block;
-            margin-bottom: 5px;
+            margin-bottom: 6px;
             font-weight: 600;
             color: #495057;
+            font-size: 0.9rem;
         }
         
         input, textarea { 
             width: 100%; 
-            padding: 12px; 
-            margin: 5px 0; 
+            padding: 14px; 
+            margin: 4px 0; 
             border: 2px solid #e9ecef;
             border-radius: 8px;
-            font-size: 16px;
+            font-size: 16px; /* Prevent zoom on iOS */
             transition: border-color 0.3s;
+            -webkit-appearance: none;
         }
         
         input:focus, textarea:focus {
@@ -208,22 +219,25 @@ try {
         .btn { 
             background: #667eea; 
             color: white; 
-            padding: 12px 25px; 
+            padding: 14px 20px; 
             border: none; 
             border-radius: 8px; 
             cursor: pointer; 
-            font-size: 16px;
+            font-size: 1rem;
             font-weight: 600;
             transition: all 0.3s;
-            margin-right: 10px;
-            margin-bottom: 10px;
+            margin-right: 8px;
+            margin-bottom: 8px;
             text-decoration: none;
             display: inline-block;
+            text-align: center;
+            width: 100%;
+            -webkit-appearance: none;
         }
         
         .btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+            transform: translateY(-1px);
+            box-shadow: 0 3px 10px rgba(102, 126, 234, 0.4);
         }
         
         .btn-primary { background: #667eea; }
@@ -236,30 +250,33 @@ try {
             color: white;
         }
         
-        .btn-secondary:hover {
-            box-shadow: 0 5px 15px rgba(108, 117, 125, 0.4);
+        .table-container {
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+            margin-top: 15px;
+            border-radius: 8px;
+            border: 1px solid #dee2e6;
         }
         
         table { 
             width: 100%; 
             border-collapse: collapse; 
-            margin-top: 20px;
             background: white;
-            border-radius: 8px;
-            overflow: hidden;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            min-width: 500px; /* Minimum table width for mobile */
         }
         
         th, td { 
-            padding: 15px; 
+            padding: 12px 10px; 
             border-bottom: 1px solid #dee2e6; 
             text-align: left; 
+            font-size: 0.85rem;
         }
         
         th { 
             background: #f8f9fa; 
             font-weight: 600;
             color: #495057;
+            white-space: nowrap;
         }
         
         tr:hover {
@@ -268,46 +285,161 @@ try {
         
         .actions {
             display: flex;
-            gap: 8px;
-            flex-wrap: wrap;
+            gap: 6px;
+            flex-wrap: nowrap;
         }
         
         .btn-sm {
-            padding: 8px 15px;
-            font-size: 14px;
+            padding: 10px 12px;
+            font-size: 0.8rem;
+            width: auto;
+            flex: 1;
         }
         
         .stock-low {
             color: #dc3545;
             font-weight: bold;
+            font-size: 0.8rem;
         }
         
         .stock-ok {
             color: #28a745;
             font-weight: bold;
+            font-size: 0.8rem;
         }
         
         .form-row {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 15px;
+            display: block; /* Stack on mobile */
         }
         
-        @media (max-width: 768px) {
-            .form-row {
-                grid-template-columns: 1fr;
-            }
-            
-            .actions {
-                flex-direction: column;
+        .button-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        
+        /* Mobile First Styles */
+        
+        /* Small phones (320px - 360px) */
+        @media (max-width: 360px) {
+            body {
+                padding: 10px;
             }
             
             .container {
-                padding: 20px;
+                padding: 15px;
+                border-radius: 8px;
             }
             
             .header h1 {
-                font-size: 2em;
+                font-size: 1.6rem;
+            }
+            
+            .form-section {
+                padding: 15px;
+            }
+            
+            .form-section h2 {
+                font-size: 1.2rem;
+            }
+            
+            input, textarea {
+                padding: 12px;
+                font-size: 16px; /* Prevent zoom */
+            }
+            
+            .btn {
+                padding: 12px 16px;
+                font-size: 0.95rem;
+            }
+            
+            th, td {
+                padding: 10px 8px;
+                font-size: 0.8rem;
+            }
+        }
+        
+        /* Tablets and larger phones (min-width: 768px) */
+        @media (min-width: 768px) {
+            body {
+                padding: 25px;
+            }
+            
+            .container {
+                max-width: 700px;
+                padding: 30px;
+            }
+            
+            .form-row {
+                display: grid;
+                grid-template-columns: 1fr 1fr;
+                gap: 15px;
+            }
+            
+            .button-group {
+                flex-direction: row;
+            }
+            
+            .btn {
+                width: auto;
+            }
+            
+            .btn-sm {
+                flex: none;
+            }
+        }
+        
+        /* Desktop (min-width: 1024px) */
+        @media (min-width: 1024px) {
+            .container {
+                max-width: 1000px;
+            }
+        }
+        
+        /* Very small devices (max-width: 320px) */
+        @media (max-width: 320px) {
+            body {
+                padding: 8px;
+            }
+            
+            .container {
+                padding: 12px;
+            }
+            
+            .header h1 {
+                font-size: 1.4rem;
+            }
+            
+            .form-section {
+                padding: 12px;
+            }
+            
+            .btn {
+                padding: 10px 14px;
+                font-size: 0.9rem;
+            }
+        }
+        
+        /* Touch device optimizations */
+        @media (hover: none) {
+            .btn:hover {
+                transform: none;
+                box-shadow: none;
+            }
+            
+            tr:hover {
+                background: inherit;
+            }
+        }
+        
+        /* iOS specific fixes */
+        @supports (-webkit-touch-callout: none) {
+            body {
+                -webkit-font-smoothing: antialiased;
+            }
+            
+            input, textarea {
+                font-size: 16px; /* Prevent zoom on focus */
             }
         }
     </style>
@@ -315,8 +447,8 @@ try {
 <body>
     <div class="container">
         <div class="header">
-            <h1>🛍️ Mercado dos Sabores - Admin</h1>
-            <p>Gerenciamento de Produtos de Pronta Entrega</p>
+            <h1>🛍️ Mercado dos Sabores</h1>
+            <p>Gerenciamento de Produtos</p>
         </div>
         
         <?php if ($message): ?>
@@ -334,7 +466,7 @@ try {
         <!-- Formulário de Adicionar/Editar Produto -->
         <div class="form-section">
             <h2>
-                <?= $editing_product ? '✏️ Editar Produto' : '➕ Adicionar Novo Produto' ?>
+                <?= $editing_product ? '✏️ Editar Produto' : '➕ Adicionar Produto' ?>
             </h2>
             <form method="POST">
                 <input type="hidden" name="action" value="<?= $editing_product ? 'update' : 'add' ?>">
@@ -342,26 +474,24 @@ try {
                     <input type="hidden" name="id" value="<?= $editing_product['id'] ?>">
                 <?php endif; ?>
                 
-                <div class="form-row">
-                    <div class="form-group">
-                        <label for="nome">Nome do Produto *</label>
-                        <input type="text" name="nome" id="nome" 
-                               value="<?= $editing_product ? htmlspecialchars($editing_product['nome']) : '' ?>" 
-                               placeholder="Ex: Brownie Ferrero" required>
-                    </div>
-                    
-                    <div class="form-group">
-                        <label for="preco">Preço (R$) *</label>
-                        <input type="number" name="preco" id="preco" step="0.01" min="0" 
-                               value="<?= $editing_product ? $editing_product['preco'] : '' ?>" 
-                               placeholder="Ex: 4.50" required>
-                    </div>
+                <div class="form-group">
+                    <label for="nome">Nome do Produto *</label>
+                    <input type="text" name="nome" id="nome" 
+                           value="<?= $editing_product ? htmlspecialchars($editing_product['nome']) : '' ?>" 
+                           placeholder="Ex: Brownie Ferrero" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="preco">Preço (R$) *</label>
+                    <input type="number" name="preco" id="preco" step="0.01" min="0" 
+                           value="<?= $editing_product ? $editing_product['preco'] : '' ?>" 
+                           placeholder="Ex: 4.50" required>
                 </div>
                 
                 <div class="form-group">
                     <label for="descricao">Descrição</label>
-                    <textarea name="descricao" id="descricao" rows="3" 
-                              placeholder="Descrição detalhada do produto..."><?= $editing_product ? htmlspecialchars($editing_product['descricao'] ?? '') : '' ?></textarea>
+                    <textarea name="descricao" id="descricao" rows="2" 
+                              placeholder="Descrição do produto..."><?= $editing_product ? htmlspecialchars($editing_product['descricao'] ?? '') : '' ?></textarea>
                 </div>
                 
                 <div class="form-group">
@@ -371,13 +501,13 @@ try {
                            placeholder="Quantidade em estoque" required>
                 </div>
                 
-                <div>
+                <div class="button-group">
                     <button type="submit" class="btn <?= $editing_product ? 'btn-success' : 'btn-primary' ?>">
-                        <?= $editing_product ? '💾 Atualizar Produto' : '➕ Adicionar Produto' ?>
+                        <?= $editing_product ? '💾 Atualizar' : '➕ Adicionar' ?>
                     </button>
                     
                     <?php if ($editing_product): ?>
-                        <a href="?" class="btn btn-secondary">❌ Cancelar Edição</a>
+                        <a href="?" class="btn btn-secondary">❌ Cancelar</a>
                     <?php endif; ?>
                 </div>
             </form>
@@ -388,53 +518,57 @@ try {
             <h2>📋 Produtos Cadastrados (<?= count($produtos) ?>)</h2>
             
             <?php if (empty($produtos)): ?>
-                <p style="text-align: center; color: #6c757d; padding: 40px;">
-                    Nenhum produto cadastrado. Adicione o primeiro produto acima.
+                <p style="text-align: center; color: #6c757d; padding: 30px;">
+                    Nenhum produto cadastrado.
                 </p>
             <?php else: ?>
-                <table>
-                    <thead>
-                        <tr>
-                            <th>ID</th>
-                            <th>Nome</th>
-                            <th>Descrição</th>
-                            <th>Preço</th>
-                            <th>Estoque</th>
-                            <th>Ações</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <?php foreach ($produtos as $produto): ?>
-                        <tr>
-                            <td><strong>#<?= $produto['id'] ?></strong></td>
-                            <td><strong><?= htmlspecialchars($produto['nome']) ?></strong></td>
-                            <td><?= htmlspecialchars($produto['descricao'] ?? '-') ?></td>
-                            <td><strong>R$ <?= number_format($produto['preco'], 2, ',', '.') ?></strong></td>
-                            <td>
-                                <span class="<?= $produto['estoque'] > 0 ? 'stock-ok' : 'stock-low' ?>">
-                                    <?= $produto['estoque'] ?> unidades
-                                </span>
-                            </td>
-                            <td class="actions">
-                                <!-- Botão Editar -->
-                                <a href="?edit=<?= $produto['id'] ?>" class="btn btn-warning btn-sm">
-                                    ✏️ Editar
-                                </a>
-                                
-                                <!-- Formulário Excluir -->
-                                <form method="POST" style="display: inline;">
-                                    <input type="hidden" name="action" value="delete">
-                                    <input type="hidden" name="id" value="<?= $produto['id'] ?>">
-                                    <button type="submit" class="btn btn-danger btn-sm" 
-                                            onclick="return confirm('Tem certeza que deseja excluir o produto \"<?= htmlspecialchars($produto['nome']) ?>\"?')">
-                                        🗑️ Excluir
-                                    </button>
-                                </form>
-                            </td>
-                        </tr>
-                        <?php endforeach; ?>
-                    </tbody>
-                </table>
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Nome</th>
+                                <th>Preço</th>
+                                <th>Estoque</th>
+                                <th>Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <?php foreach ($produtos as $produto): ?>
+                            <tr>
+                                <td><strong>#<?= $produto['id'] ?></strong></td>
+                                <td>
+                                    <strong><?= htmlspecialchars($produto['nome']) ?></strong>
+                                    <?php if (!empty($produto['descricao'])): ?>
+                                        <br><small style="color: #666;"><?= htmlspecialchars($produto['descricao']) ?></small>
+                                    <?php endif; ?>
+                                </td>
+                                <td><strong>R$ <?= number_format($produto['preco'], 2, ',', '.') ?></strong></td>
+                                <td>
+                                    <span class="<?= $produto['estoque'] > 0 ? 'stock-ok' : 'stock-low' ?>">
+                                        <?= $produto['estoque'] ?> un
+                                    </span>
+                                </td>
+                                <td>
+                                    <div class="actions">
+                                        <a href="?edit=<?= $produto['id'] ?>" class="btn btn-warning btn-sm">
+                                            ✏️
+                                        </a>
+                                        <form method="POST" style="display: inline;">
+                                            <input type="hidden" name="action" value="delete">
+                                            <input type="hidden" name="id" value="<?= $produto['id'] ?>">
+                                            <button type="submit" class="btn btn-danger btn-sm" 
+                                                    onclick="return confirm('Excluir <?= htmlspecialchars($produto['nome']) ?>?')">
+                                                🗑️
+                                            </button>
+                                        </form>
+                                    </div>
+                                </td>
+                            </tr>
+                            <?php endforeach; ?>
+                        </tbody>
+                    </table>
+                </div>
             <?php endif; ?>
         </div>
     </div>
@@ -479,7 +613,7 @@ try {
                     btn.disabled = true;
                     const originalText = btn.innerHTML;
                     btn.setAttribute('data-original-text', originalText);
-                    btn.innerHTML = '⏳ Processando...';
+                    btn.innerHTML = '⏳...';
                 });
                 
                 setTimeout(() => {
@@ -494,6 +628,9 @@ try {
                 }, 3000);
             });
         });
+
+        // Otimização para touch
+        document.addEventListener('touchstart', function() {}, { passive: true });
     </script>
 </body>
 </html>
