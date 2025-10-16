@@ -5,8 +5,5 @@
     "require": {
         "php": ">=8.0",
         "ext-pdo": "*"
-    },
-    "require-dev": {
-        "heroku/heroku-buildpack-php": "*"
     }
 }
