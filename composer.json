@@ -1,0 +1,12 @@
+{
+    "name": "mercado-sabores/admin",
+    "description": "Painel de administração para Mercado dos Sabores",
+    "type": "project",
+    "require": {
+        "php": ">=8.0",
+        "ext-pdo": "*"
+    },
+    "require-dev": {
+        "heroku/heroku-buildpack-php": "*"
+    }
+}
