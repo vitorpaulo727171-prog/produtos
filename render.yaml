@@ -1,0 +1,18 @@
+services:
+  - type: web
+    name: mercado-sabores-admin
+    env: php
+    plan: free
+    buildCommand: "composer install --no-dev --optimize-autoloader"
+    startCommand: "php -S 0.0.0.0:$PORT -t public"
+    envVars:
+      - key: MYSQL_HOST
+        value: trolley.proxy.rlwy.net
+      - key: MYSQL_PORT  
+        value: 52398
+      - key: MYSQL_USER
+        value: root
+      - key: MYSQL_PASSWORD
+        value: ZefFlJwoGgbGclwcSyOeZuvMGVqmhvtH
+      - key: MYSQL_DATABASE
+        value: railway
