@@ -262,7 +262,7 @@ try {
             width: 100%; 
             border-collapse: collapse; 
             background: white;
-            min-width: 500px; /* Minimum table width for mobile */
+            min-width: 380px; /* Minimum table width for mobile */
         }
         
         th, td { 
