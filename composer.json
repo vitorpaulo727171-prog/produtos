@@ -4,11 +4,6 @@
     "type": "project",
     "require": {
         "php": ">=8.0",
-        "ext-pdo": "*",
-        "ext-mysqli": "*",
-        "ext-json": "*"
-    },
-    "require-dev": {
-        "ext-gd": "*"
+        "ext-pdo": "*"
     }
 }
