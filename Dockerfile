@@ -1,19 +1,16 @@
-FROM php:8.2-apache
+FROM php:8.2-cli
 
 # Instalar extensões do PHP necessárias
 RUN docker-php-ext-install pdo pdo_mysql
 
-# Habilitar mod_rewrite do Apache
-RUN a2enmod rewrite
+# Criar diretório da aplicação
+WORKDIR /app
 
-# Copiar arquivos da aplicação
-COPY . /var/www/html/
+# Copiar arquivos
+COPY . /app/
 
-# Definir permissões
-RUN chown -R www-data:www-data /var/www/html
+# Expor porta (Render usa $PORT)
+EXPOSE 8080
 
-# Expor porta
-EXPOSE 80
-
-# Comando de inicialização
-CMD ["apache2-foreground"]
+# Iniciar servidor PHP
+CMD ["php", "-S", "0.0.0.0:8080", "-t", "public"]
