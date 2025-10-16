@@ -23,63 +23,68 @@ $message = '';
 $error = '';
 $editing_product = null;
 
-// Ação: Adicionar produto
-if ($_POST['action'] === 'add') {
-    $nome = trim($_POST['nome'] ?? '');
-    $descricao = trim($_POST['descricao'] ?? '');
-    $preco = $_POST['preco'] ?? '';
-    $estoque = $_POST['estoque'] ?? '';
+// Verificar se é uma requisição POST e se existe action
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
+    $action = $_POST['action'];
     
-    if ($nome && is_numeric($preco) && is_numeric($estoque)) {
-        try {
-            $stmt = $pdo->prepare("INSERT INTO produtos_pronta_entrega (nome, descricao, preco, estoque) VALUES (?, ?, ?, ?)");
-            $stmt->execute([$nome, $descricao, floatval($preco), intval($estoque)]);
-            $message = "✅ Produto adicionado com sucesso!";
-        } catch (Exception $e) {
-            $error = "❌ Erro ao adicionar produto: " . $e->getMessage();
+    // Ação: Adicionar produto
+    if ($action === 'add') {
+        $nome = trim($_POST['nome'] ?? '');
+        $descricao = trim($_POST['descricao'] ?? '');
+        $preco = $_POST['preco'] ?? '';
+        $estoque = $_POST['estoque'] ?? '';
+        
+        if ($nome && is_numeric($preco) && is_numeric($estoque)) {
+            try {
+                $stmt = $pdo->prepare("INSERT INTO produtos_pronta_entrega (nome, descricao, preco, estoque) VALUES (?, ?, ?, ?)");
+                $stmt->execute([$nome, $descricao, floatval($preco), intval($estoque)]);
+                $message = "✅ Produto adicionado com sucesso!";
+            } catch (Exception $e) {
+                $error = "❌ Erro ao adicionar produto: " . $e->getMessage();
+            }
+        } else {
+            $error = "❌ Preencha todos os campos obrigatórios corretamente!";
         }
-    } else {
-        $error = "❌ Preencha todos os campos obrigatórios corretamente!";
+    }
+
+    // Ação: Atualizar produto
+    if ($action === 'update') {
+        $id = $_POST['id'] ?? '';
+        $nome = trim($_POST['nome'] ?? '');
+        $descricao = trim($_POST['descricao'] ?? '');
+        $preco = $_POST['preco'] ?? '';
+        $estoque = $_POST['estoque'] ?? '';
+        
+        if ($id && $nome && is_numeric($preco) && is_numeric($estoque)) {
+            try {
+                $stmt = $pdo->prepare("UPDATE produtos_pronta_entrega SET nome = ?, descricao = ?, preco = ?, estoque = ? WHERE id = ?");
+                $stmt->execute([$nome, $descricao, floatval($preco), intval($estoque), intval($id)]);
+                $message = "✅ Produto atualizado com sucesso!";
+            } catch (Exception $e) {
+                $error = "❌ Erro ao atualizar produto: " . $e->getMessage();
+            }
+        } else {
+            $error = "❌ Preencha todos os campos obrigatórios!";
+        }
+    }
+
+    // Ação: Excluir produto
+    if ($action === 'delete') {
+        $id = $_POST['id'] ?? '';
+        if ($id) {
+            try {
+                $stmt = $pdo->prepare("DELETE FROM produtos_pronta_entrega WHERE id = ?");
+                $stmt->execute([intval($id)]);
+                $message = "✅ Produto excluído com sucesso!";
+            } catch (Exception $e) {
+                $error = "❌ Erro ao excluir produto: " . $e->getMessage();
+            }
+        }
     }
 }
 
-// Ação: Atualizar produto
-if ($_POST['action'] === 'update') {
-    $id = $_POST['id'] ?? '';
-    $nome = trim($_POST['nome'] ?? '');
-    $descricao = trim($_POST['descricao'] ?? '');
-    $preco = $_POST['preco'] ?? '';
-    $estoque = $_POST['estoque'] ?? '';
-    
-    if ($id && $nome && is_numeric($preco) && is_numeric($estoque)) {
-        try {
-            $stmt = $pdo->prepare("UPDATE produtos_pronta_entrega SET nome = ?, descricao = ?, preco = ?, estoque = ? WHERE id = ?");
-            $stmt->execute([$nome, $descricao, floatval($preco), intval($estoque), intval($id)]);
-            $message = "✅ Produto atualizado com sucesso!";
-        } catch (Exception $e) {
-            $error = "❌ Erro ao atualizar produto: " . $e->getMessage();
-        }
-    } else {
-        $error = "❌ Preencha todos os campos obrigatórios!";
-    }
-}
-
-// Ação: Excluir produto
-if ($_POST['action'] === 'delete') {
-    $id = $_POST['id'] ?? '';
-    if ($id) {
-        try {
-            $stmt = $pdo->prepare("DELETE FROM produtos_pronta_entrega WHERE id = ?");
-            $stmt->execute([intval($id)]);
-            $message = "✅ Produto excluído com sucesso!";
-        } catch (Exception $e) {
-            $error = "❌ Erro ao excluir produto: " . $e->getMessage();
-        }
-    }
-}
-
-// Carregar produto para edição
-if (isset($_GET['edit'])) {
+// Carregar produto para edição (apenas se não for uma submissão de formulário)
+if (!$message && !$error && isset($_GET['edit'])) {
     $id = $_GET['edit'];
     try {
         $stmt = $pdo->prepare("SELECT * FROM produtos_pronta_entrega WHERE id = ?");
@@ -91,7 +96,12 @@ if (isset($_GET['edit'])) {
 }
 
 // Buscar produtos
-$produtos = $pdo->query("SELECT * FROM produtos_pronta_entrega ORDER BY id DESC")->fetchAll();
+try {
+    $produtos = $pdo->query("SELECT * FROM produtos_pronta_entrega ORDER BY id DESC")->fetchAll();
+} catch (Exception $e) {
+    $error = "❌ Erro ao carregar produtos: " . $e->getMessage();
+    $produtos = [];
+}
 ?>
 <!DOCTYPE html>
 <html>
@@ -207,6 +217,8 @@ $produtos = $pdo->query("SELECT * FROM produtos_pronta_entrega ORDER BY id DESC"
             transition: all 0.3s;
             margin-right: 10px;
             margin-bottom: 10px;
+            text-decoration: none;
+            display: inline-block;
         }
         
         .btn:hover {
@@ -452,34 +464,34 @@ $produtos = $pdo->query("SELECT * FROM produtos_pronta_entrega ORDER BY id DESC"
 
         // Prevenir envio duplo do formulário
         let formSubmitting = false;
-        document.querySelector('form')?.addEventListener('submit', function(e) {
-            if (formSubmitting) {
-                e.preventDefault();
-                return;
-            }
-            formSubmitting = true;
-            
-            // Desabilitar botões para evitar clique duplo
-            const buttons = this.querySelectorAll('button[type="submit"]');
-            buttons.forEach(btn => {
-                btn.disabled = true;
-                btn.innerHTML = '⏳ Processando...';
-            });
-            
-            setTimeout(() => {
-                formSubmitting = false;
+        const forms = document.querySelectorAll('form');
+        forms.forEach(form => {
+            form.addEventListener('submit', function(e) {
+                if (formSubmitting) {
+                    e.preventDefault();
+                    return;
+                }
+                formSubmitting = true;
+                
+                // Desabilitar botões para evitar clique duplo
+                const buttons = this.querySelectorAll('button[type="submit"]');
                 buttons.forEach(btn => {
-                    btn.disabled = false;
-                    btn.innerHTML = btn.getAttribute('data-original-text') || btn.innerHTML;
+                    btn.disabled = true;
+                    const originalText = btn.innerHTML;
+                    btn.setAttribute('data-original-text', originalText);
+                    btn.innerHTML = '⏳ Processando...';
                 });
-            }, 3000);
-        });
-
-        // Salvar texto original dos botões
-        document.addEventListener('DOMContentLoaded', function() {
-            const buttons = document.querySelectorAll('button[type="submit"]');
-            buttons.forEach(btn => {
-                btn.setAttribute('data-original-text', btn.innerHTML);
+                
+                setTimeout(() => {
+                    formSubmitting = false;
+                    buttons.forEach(btn => {
+                        btn.disabled = false;
+                        const originalText = btn.getAttribute('data-original-text');
+                        if (originalText) {
+                            btn.innerHTML = originalText;
+                        }
+                    });
+                }, 3000);
             });
         });
     </script>
