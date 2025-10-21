@@ -1,6 +1,106 @@
 <?php
-// ... (código anterior permanece igual)
+$db_config = [
+    'host' => getenv('MYSQL_HOST') ?: 'trolley.proxy.rlwy.net',
+    'port' => getenv('MYSQL_PORT') ?: '52398',
+    'user' => getenv('MYSQL_USER') ?: 'root',
+    'pass' => getenv('MYSQL_PASSWORD') ?: 'ZefFlJwoGgbGclwcSyOeZuvMGVqmhvtH',
+    'name' => getenv('MYSQL_DATABASE') ?: 'railway'
+];
 
+// Conexão com banco
+try {
+    $dsn = "mysql:host={$db_config['host']};port={$db_config['port']};dbname={$db_config['name']};charset=utf8mb4";
+    $pdo = new PDO($dsn, $db_config['user'], $db_config['pass'], [
+        PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION
+    ]);
+} catch (PDOException $e) {
+    die("Erro de conexão: " . $e->getMessage());
+}
+
+// Processar formulário
+$message = '';
+$error = '';
+$editing_product = null;
+
+// Verificar se é uma requisição POST e se existe action
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
+    $action = $_POST['action'];
+    
+    // Ação: Adicionar produto
+    if ($action === 'add') {
+        $nome = trim($_POST['nome'] ?? '');
+        $descricao = trim($_POST['descricao'] ?? '');
+        $preco = $_POST['preco'] ?? '';
+        $estoque = $_POST['estoque'] ?? '';
+        
+        if ($nome && is_numeric($preco) && is_numeric($estoque)) {
+            try {
+                $stmt = $pdo->prepare("INSERT INTO produtos_pronta_entrega (nome, descricao, preco, estoque) VALUES (?, ?, ?, ?)");
+                $stmt->execute([$nome, $descricao, floatval($preco), intval($estoque)]);
+                $message = "✅ Produto adicionado com sucesso!";
+            } catch (Exception $e) {
+                $error = "❌ Erro ao adicionar produto: " . $e->getMessage();
+            }
+        } else {
+            $error = "❌ Preencha todos os campos obrigatórios corretamente!";
+        }
+    }
+
+    // Ação: Atualizar produto
+    if ($action === 'update') {
+        $id = $_POST['id'] ?? '';
+        $nome = trim($_POST['nome'] ?? '');
+        $descricao = trim($_POST['descricao'] ?? '');
+        $preco = $_POST['preco'] ?? '';
+        $estoque = $_POST['estoque'] ?? '';
+        
+        if ($id && $nome && is_numeric($preco) && is_numeric($estoque)) {
+            try {
+                $stmt = $pdo->prepare("UPDATE produtos_pronta_entrega SET nome = ?, descricao = ?, preco = ?, estoque = ? WHERE id = ?");
+                $stmt->execute([$nome, $descricao, floatval($preco), intval($estoque), intval($id)]);
+                $message = "✅ Produto atualizado com sucesso!";
+            } catch (Exception $e) {
+                $error = "❌ Erro ao atualizar produto: " . $e->getMessage();
+            }
+        } else {
+            $error = "❌ Preencha todos os campos obrigatórios!";
+        }
+    }
+
+    // Ação: Excluir produto
+    if ($action === 'delete') {
+        $id = $_POST['id'] ?? '';
+        if ($id) {
+            try {
+                $stmt = $pdo->prepare("DELETE FROM produtos_pronta_entrega WHERE id = ?");
+                $stmt->execute([intval($id)]);
+                $message = "✅ Produto excluído com sucesso!";
+            } catch (Exception $e) {
+                $error = "❌ Erro ao excluir produto: " . $e->getMessage();
+            }
+        }
+    }
+}
+
+// Carregar produto para edição (apenas se não for uma submissão de formulário)
+if (!$message && !$error && isset($_GET['edit'])) {
+    $id = $_GET['edit'];
+    try {
+        $stmt = $pdo->prepare("SELECT * FROM produtos_pronta_entrega WHERE id = ?");
+        $stmt->execute([intval($id)]);
+        $editing_product = $stmt->fetch();
+    } catch (Exception $e) {
+        $error = "❌ Erro ao carregar produto: " . $e->getMessage();
+    }
+}
+
+// Buscar produtos
+try {
+    $produtos = $pdo->query("SELECT * FROM produtos_pronta_entrega ORDER BY id DESC")->fetchAll();
+} catch (Exception $e) {
+    $error = "❌ Erro ao carregar produtos: " . $e->getMessage();
+    $produtos = [];
+}
 // Processar pesquisa
 $search_term = '';
 if (isset($_GET['search']) && !empty(trim($_GET['search']))) {
