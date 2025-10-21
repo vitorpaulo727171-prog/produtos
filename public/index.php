@@ -561,19 +561,6 @@ try {
             <h1>🛍️ Mercado dos Sabores</h1>
             <p>Gerenciamento de Produtos</p>
             
-            <!-- Barra de Pesquisa -->
-            <div class="search-container">
-                <div class="search-icon">🔍</div>
-                <input type="text" 
-                       id="search-input"
-                       class="search-input" 
-                       placeholder="Pesquisar produtos por nome ou descrição..." 
-                       autocomplete="off">
-                <div class="search-actions">
-                    <button type="button" id="clear-search" class="clear-btn" style="display: none;">Limpar</button>
-                </div>
-            </div>
-        </div>
         
         <?php if ($message): ?>
             <div class="alert success">
@@ -641,7 +628,19 @@ try {
                 </div>
             </form>
         </div>
-
+ <!-- Barra de Pesquisa -->
+            <div class="search-container">
+                <div class="search-icon">🔍</div>
+                <input type="text" 
+                       id="search-input"
+                       class="search-input" 
+                       placeholder="Pesquisar produtos por nome ou descrição..." 
+                       autocomplete="off">
+                <div class="search-actions">
+                    <button type="button" id="clear-search" class="clear-btn" style="display: none;">Limpar</button>
+                </div>
+            </div>
+        </div>
         <!-- Lista de Produtos -->
         <div class="form-section">
             <h2>📋 Produtos Cadastrados (<span id="total-count"><?= count($produtos) ?></span>)</h2>
