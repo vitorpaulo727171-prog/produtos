@@ -102,6 +102,17 @@ try {
     $error = "❌ Erro ao carregar produtos: " . $e->getMessage();
     $produtos = [];
 }
+    
+<?php
+// ... (código anterior permanece igual)
+
+// Buscar produtos
+try {
+    $produtos = $pdo->query("SELECT * FROM produtos_pronta_entrega ORDER BY id DESC")->fetchAll();
+} catch (Exception $e) {
+    $error = "❌ Erro ao carregar produtos: " . $e->getMessage();
+    $produtos = [];
+}
 ?>
 <!DOCTYPE html>
 <html>
@@ -110,280 +121,16 @@ try {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
+        /* ... (estilos anteriores permanecem iguais) */
         
-        body { 
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif; 
-            margin: 0;
-            padding: 15px; 
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            min-height: 100vh;
-            -webkit-text-size-adjust: 100%;
-            -webkit-tap-highlight-color: transparent;
-        }
-        
-        .container { 
-            max-width: 100%; 
-            margin: 0 auto; 
-            background: white; 
-            padding: 20px; 
-            border-radius: 12px;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.15);
-        }
-        
-        .header {
-            text-align: center;
-            margin-bottom: 25px;
-            padding-bottom: 15px;
-            border-bottom: 1px solid #e9ecef;
-            position: relative;
-        }
-        
-        .back-button {
+        .search-loading {
             position: absolute;
-            left: 0;
-            top: 0;
-            background: #6c757d;
-            color: white;
-            padding: 10px 15px;
-            border-radius: 6px;
-            text-decoration: none;
-            font-weight: 600;
-            font-size: 0.9rem;
-            display: flex;
-            align-items: center;
-            gap: 5px;
-            transition: all 0.3s;
-        }
-        
-        .back-button:hover {
-            background: #5a6268;
-            transform: translateX(-2px);
-        }
-        
-        .header h1 {
-            color: #333;
-            font-size: 1.8rem;
-            margin-bottom: 8px;
-            line-height: 1.2;
-            padding: 0 60px;
-        }
-        
-        .header p {
-            color: #666;
-            font-size: 0.9rem;
-        }
-        
-        .search-container {
-            margin: 20px 0;
-            position: relative;
-        }
-        
-        .search-input {
-            width: 100%;
-            padding: 14px 50px 14px 45px;
-            border: 2px solid #e9ecef;
-            border-radius: 8px;
-            font-size: 16px;
-            transition: border-color 0.3s;
-            background: #f8f9fa;
-        }
-        
-        .search-input:focus {
-            outline: none;
-            border-color: #667eea;
-            background: white;
-        }
-        
-        .search-icon {
-            position: absolute;
-            left: 15px;
+            right: 15px;
             top: 50%;
             transform: translateY(-50%);
-            color: #6c757d;
-            font-size: 1.1rem;
-        }
-        
-        .search-actions {
-            position: absolute;
-            right: 10px;
-            top: 50%;
-            transform: translateY(-50%);
-            display: flex;
-            gap: 5px;
-        }
-        
-        .clear-btn {
-            background: #6c757d;
-            color: white;
-            border: none;
-            border-radius: 6px;
-            padding: 8px 12px;
-            cursor: pointer;
-            font-size: 0.8rem;
-            transition: background 0.3s;
-        }
-        
-        .clear-btn:hover {
-            background: #5a6268;
-        }
-        
-        .alert {
-            padding: 12px 15px;
-            margin-bottom: 15px;
-            border-radius: 8px;
-            font-weight: 500;
+            color: #667eea;
             font-size: 0.9rem;
-        }
-        
-        .alert.success {
-            background: #d4edda;
-            color: #155724;
-            border: 1px solid #c3e6cb;
-        }
-        
-        .alert.error {
-            background: #f8d7da;
-            color: #721c24;
-            border: 1px solid #f5c6cb;
-        }
-        
-        .form-section {
-            background: #f8f9fa;
-            padding: 20px;
-            border-radius: 8px;
-            margin-bottom: 20px;
-            border: 1px solid #e9ecef;
-        }
-        
-        .form-section h2 {
-            color: #495057;
-            margin-bottom: 15px;
-            font-size: 1.3rem;
-        }
-        
-        .form-group { 
-            margin: 12px 0; 
-        }
-        
-        .form-group label {
-            display: block;
-            margin-bottom: 6px;
-            font-weight: 600;
-            color: #495057;
-            font-size: 0.9rem;
-        }
-        
-        input, textarea { 
-            width: 100%; 
-            padding: 14px; 
-            margin: 4px 0; 
-            border: 2px solid #e9ecef;
-            border-radius: 8px;
-            font-size: 16px;
-            transition: border-color 0.3s;
-            -webkit-appearance: none;
-        }
-        
-        input:focus, textarea:focus {
-            outline: none;
-            border-color: #667eea;
-        }
-        
-        .btn { 
-            background: #667eea; 
-            color: white; 
-            padding: 14px 20px; 
-            border: none; 
-            border-radius: 8px; 
-            cursor: pointer; 
-            font-size: 1rem;
-            font-weight: 600;
-            transition: all 0.3s;
-            margin-right: 8px;
-            margin-bottom: 8px;
-            text-decoration: none;
-            display: inline-block;
-            text-align: center;
-            width: 100%;
-            -webkit-appearance: none;
-        }
-        
-        .btn:hover {
-            transform: translateY(-1px);
-            box-shadow: 0 3px 10px rgba(102, 126, 234, 0.4);
-        }
-        
-        .btn-primary { background: #667eea; }
-        .btn-success { background: #28a745; }
-        .btn-danger { background: #dc3545; }
-        .btn-warning { background: #ffc107; color: #212529; }
-        
-        .btn-secondary { 
-            background: #6c757d; 
-            color: white;
-        }
-        
-        .table-container {
-            overflow-x: auto;
-            -webkit-overflow-scrolling: touch;
-            margin-top: 15px;
-            border-radius: 8px;
-            border: 1px solid #dee2e6;
-        }
-        
-        table { 
-            width: 100%; 
-            border-collapse: collapse; 
-            background: white;
-            min-width: 380px;
-        }
-        
-        th, td { 
-            padding: 12px 10px; 
-            border-bottom: 1px solid #dee2e6; 
-            text-align: left; 
-            font-size: 0.85rem;
-        }
-        
-        th { 
-            background: #f8f9fa; 
-            font-weight: 600;
-            color: #495057;
-            white-space: nowrap;
-        }
-        
-        tr:hover {
-            background: #f8f9fa;
-        }
-        
-        .actions {
-            display: flex;
-            gap: 6px;
-            flex-wrap: nowrap;
-        }
-        
-        .btn-sm {
-            padding: 10px 12px;
-            font-size: 0.8rem;
-            width: auto;
-            flex: 1;
-        }
-        
-        .stock-low {
-            color: #dc3545;
-            font-weight: bold;
-            font-size: 0.8rem;
-        }
-        
-        .stock-ok {
-            color: #28a745;
-            font-weight: bold;
-            font-size: 0.8rem;
+            display: none;
         }
         
         .search-results-info {
@@ -393,7 +140,7 @@ try {
             border-radius: 6px;
             margin-bottom: 15px;
             font-size: 0.9rem;
-            display: flex;
+            display: none;
             justify-content: space-between;
             align-items: center;
         }
@@ -403,153 +150,10 @@ try {
             color: #6c757d;
             padding: 30px;
             font-style: italic;
+            display: none;
         }
         
-        .form-row {
-            display: block;
-        }
-        
-        .button-group {
-            display: flex;
-            flex-direction: column;
-            gap: 8px;
-        }
-        
-        /* Mobile First Styles */
-        
-        /* Small phones (320px - 360px) */
-        @media (max-width: 360px) {
-            body {
-                padding: 10px;
-            }
-            
-            .container {
-                padding: 15px;
-                border-radius: 8px;
-            }
-            
-            .header h1 {
-                font-size: 1.6rem;
-                padding: 0 50px;
-            }
-            
-            .back-button {
-                padding: 8px 12px;
-                font-size: 0.8rem;
-            }
-            
-            .form-section {
-                padding: 15px;
-            }
-            
-            .form-section h2 {
-                font-size: 1.2rem;
-            }
-            
-            input, textarea {
-                padding: 12px;
-                font-size: 16px;
-            }
-            
-            .btn {
-                padding: 12px 16px;
-                font-size: 0.95rem;
-            }
-            
-            th, td {
-                padding: 10px 8px;
-                font-size: 0.8rem;
-            }
-            
-            .search-input {
-                padding: 12px 45px 12px 40px;
-            }
-        }
-        
-        /* Tablets and larger phones (min-width: 768px) */
-        @media (min-width: 768px) {
-            body {
-                padding: 25px;
-            }
-            
-            .container {
-                max-width: 700px;
-                padding: 30px;
-            }
-            
-            .form-row {
-                display: grid;
-                grid-template-columns: 1fr 1fr;
-                gap: 15px;
-            }
-            
-            .button-group {
-                flex-direction: row;
-            }
-            
-            .btn {
-                width: auto;
-            }
-            
-            .btn-sm {
-                flex: none;
-            }
-        }
-        
-        /* Desktop (min-width: 1024px) */
-        @media (min-width: 1024px) {
-            .container {
-                max-width: 1000px;
-            }
-        }
-        
-        /* Very small devices (max-width: 320px) */
-        @media (max-width: 320px) {
-            body {
-                padding: 8px;
-            }
-            
-            .container {
-                padding: 12px;
-            }
-            
-            .header h1 {
-                font-size: 1.4rem;
-                padding: 0 40px;
-            }
-            
-            .form-section {
-                padding: 12px;
-            }
-            
-            .btn {
-                padding: 10px 14px;
-                font-size: 0.9rem;
-            }
-        }
-        
-        /* Touch device optimizations */
-        @media (hover: none) {
-            .btn:hover {
-                transform: none;
-                box-shadow: none;
-            }
-            
-            tr:hover {
-                background: inherit;
-            }
-        }
-        
-        /* iOS specific fixes */
-        @supports (-webkit-touch-callout: none) {
-            body {
-                -webkit-font-smoothing: antialiased;
-            }
-            
-            input, textarea {
-                font-size: 16px;
-            }
-        }
+        /* ... (outros estilos permanecem iguais) */
     </style>
 </head>
 <body>
@@ -560,12 +164,8 @@ try {
             </a>
             <h1>🛍️ Mercado dos Sabores</h1>
             <p>Gerenciamento de Produtos</p>
-
-        <div class="search-results-info" id="search-info" style="display: none;">
-            <span id="search-text">🔍 Resultados da pesquisa</span>
-            <span id="search-count">0 produto(s) encontrado(s)</span>
-        </div>
-
+            
+           
         <!-- Formulário de Adicionar/Editar Produto -->
         <div class="form-section">
             <h2>
@@ -616,14 +216,15 @@ try {
             </form>
         </div>
 
-            
-        <div class="search-container">
+         <!-- Barra de Pesquisa -->
+         <div class="search-container">
                 <div class="search-icon">🔍</div>
                 <input type="text" 
                        id="search-input"
                        class="search-input" 
                        placeholder="Pesquisar produtos por nome ou descrição..." 
                        autocomplete="off">
+                <div class="search-loading" id="search-loading">⏳</div>
                 <div class="search-actions">
                     <button type="button" id="clear-search" class="clear-btn" style="display: none;">Limpar</button>
                 </div>
@@ -642,13 +243,19 @@ try {
             </div>
         <?php endif; ?>
 
+        <div class="search-results-info" id="search-info">
+            <span id="search-text">🔍 Resultados da pesquisa</span>
+            <span id="search-count">0 produto(s) encontrado(s)</span>
+        </div>
+
+            
         <!-- Lista de Produtos -->
         <div class="form-section">
             <h2>📋 Produtos Cadastrados (<span id="total-count"><?= count($produtos) ?></span>)</h2>
             
             <div id="produtos-container">
                 <?php if (empty($produtos)): ?>
-                    <p class="no-results">
+                    <p class="no-results" id="no-products-message">
                         Nenhum produto cadastrado.
                     </p>
                 <?php else: ?>
@@ -665,7 +272,7 @@ try {
                             </thead>
                             <tbody id="produtos-body">
                                 <?php foreach ($produtos as $produto): ?>
-                                <tr class="produto-item" data-nome="<?= htmlspecialchars(strtolower($produto['nome'])) ?>" data-descricao="<?= htmlspecialchars(strtolower($produto['descricao'] ?? '')) ?>">
+                                <tr class="produto-item" data-search="<?= htmlspecialchars(strtolower($produto['nome'] . ' ' . ($produto['descricao'] ?? ''))) ?>">
                                     <td><strong>#<?= $produto['id'] ?></strong></td>
                                     <td>
                                         <strong><?= htmlspecialchars($produto['nome']) ?></strong>
@@ -699,13 +306,16 @@ try {
                             </tbody>
                         </table>
                     </div>
+                    <p class="no-results" id="no-results-message" style="display: none;">
+                        Nenhum produto encontrado para sua pesquisa.
+                    </p>
                 <?php endif; ?>
             </div>
         </div>
     </div>
 
     <script>
-        // Busca automática em tempo real
+        // Busca automática em tempo real - CORRIGIDA
         document.addEventListener('DOMContentLoaded', function() {
             const searchInput = document.getElementById('search-input');
             const clearSearch = document.getElementById('clear-search');
@@ -714,13 +324,36 @@ try {
             const searchCount = document.getElementById('search-count');
             const totalCount = document.getElementById('total-count');
             const produtosBody = document.getElementById('produtos-body');
-            const produtoItems = document.querySelectorAll('.produto-item');
+            const noResultsMessage = document.getElementById('no-results-message');
+            const noProductsMessage = document.getElementById('no-products-message');
             const tableContainer = document.querySelector('.table-container');
+            const searchLoading = document.getElementById('search-loading');
+            
+            let produtoItems = [];
+            let searchTimeout = null;
+            
+            // Inicializar lista de produtos
+            if (produtosBody) {
+                produtoItems = Array.from(produtosBody.getElementsByClassName('produto-item'));
+            }
             
             // Mostrar/ocultar botão limpar
             searchInput.addEventListener('input', function() {
                 clearSearch.style.display = this.value ? 'block' : 'none';
-                filterProducts(this.value.toLowerCase());
+                
+                // Mostrar loading durante a digitação
+                searchLoading.style.display = 'block';
+                
+                // Limpar timeout anterior
+                if (searchTimeout) {
+                    clearTimeout(searchTimeout);
+                }
+                
+                // Aguardar um pouco antes de filtrar (debounce)
+                searchTimeout = setTimeout(() => {
+                    filterProducts(this.value.toLowerCase().trim());
+                    searchLoading.style.display = 'none';
+                }, 300);
             });
             
             // Botão limpar
@@ -731,17 +364,33 @@ try {
                 searchInput.focus();
             });
             
-            // Função de filtro
+            // Função de filtro corrigida
             function filterProducts(searchTerm) {
                 let visibleCount = 0;
                 
+                // Se não há produtos, não fazer nada
                 if (produtoItems.length === 0) return;
                 
-                produtoItems.forEach(item => {
-                    const nome = item.getAttribute('data-nome');
-                    const descricao = item.getAttribute('data-descricao');
+                // Se a pesquisa está vazia, mostrar todos os produtos
+                if (!searchTerm) {
+                    produtoItems.forEach(item => {
+                        item.style.display = '';
+                    });
                     
-                    const matches = nome.includes(searchTerm) || descricao.includes(searchTerm);
+                    // Ocultar mensagens de pesquisa
+                    searchInfo.style.display = 'none';
+                    if (noResultsMessage) noResultsMessage.style.display = 'none';
+                    if (tableContainer) tableContainer.style.display = 'block';
+                    
+                    // Atualizar contador
+                    totalCount.textContent = produtoItems.length;
+                    return;
+                }
+                
+                // Filtrar produtos
+                produtoItems.forEach(item => {
+                    const searchData = item.getAttribute('data-search');
+                    const matches = searchData.includes(searchTerm);
                     
                     if (matches) {
                         item.style.display = '';
@@ -752,32 +401,24 @@ try {
                 });
                 
                 // Atualizar informações da busca
-                if (searchTerm) {
-                    searchText.textContent = `🔍 Resultados da pesquisa por: "${searchTerm}"`;
-                    searchCount.textContent = `${visibleCount} produto(s) encontrado(s)`;
-                    searchInfo.style.display = 'flex';
-                    totalCount.textContent = visibleCount;
-                } else {
-                    searchInfo.style.display = 'none';
-                    totalCount.textContent = produtoItems.length;
-                }
+                searchText.textContent = `🔍 Resultados da pesquisa por: "${searchTerm}"`;
+                searchCount.textContent = `${visibleCount} produto(s) encontrado(s)`;
+                searchInfo.style.display = 'flex';
+                totalCount.textContent = visibleCount;
                 
-                // Mostrar mensagem se não houver resultados
-                const noResults = document.querySelector('.no-results');
-                if (visibleCount === 0 && searchTerm) {
-                    if (!noResults) {
-                        const noResultsMsg = document.createElement('p');
-                        noResultsMsg.className = 'no-results';
-                        noResultsMsg.textContent = `Nenhum produto encontrado para "${searchTerm}".`;
-                        produtosBody.innerHTML = '';
-                        produtosBody.appendChild(noResultsMsg);
-                    }
+                // Mostrar/ocultar mensagem de nenhum resultado
+                if (visibleCount === 0) {
+                    if (noResultsMessage) noResultsMessage.style.display = 'block';
+                    if (tableContainer) tableContainer.style.display = 'none';
+                } else {
+                    if (noResultsMessage) noResultsMessage.style.display = 'none';
+                    if (tableContainer) tableContainer.style.display = 'block';
                 }
             }
             
             // Focar no campo de busca quando carregar a página
             setTimeout(() => {
-                searchInput.focus();
+                if (searchInput) searchInput.focus();
             }, 100);
         });
 
@@ -800,7 +441,7 @@ try {
             const nomeField = document.getElementById('nome');
             const searchInput = document.getElementById('search-input');
             
-            if (nomeField && !nomeField.value && !searchInput.value) {
+            if (nomeField && !nomeField.value && searchInput && !searchInput.value) {
                 nomeField.focus();
             }
         });
