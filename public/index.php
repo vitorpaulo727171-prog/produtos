@@ -560,19 +560,6 @@ try {
             </a>
             <h1>🛍️ Mercado dos Sabores</h1>
             <p>Gerenciamento de Produtos</p>
-            
-        
-        <?php if ($message): ?>
-            <div class="alert success">
-                <?= $message ?>
-            </div>
-        <?php endif; ?>
-        
-        <?php if ($error): ?>
-            <div class="alert error">
-                <?= $error ?>
-            </div>
-        <?php endif; ?>
 
         <div class="search-results-info" id="search-info" style="display: none;">
             <span id="search-text">🔍 Resultados da pesquisa</span>
@@ -628,8 +615,9 @@ try {
                 </div>
             </form>
         </div>
- <!-- Barra de Pesquisa -->
-            <div class="search-container">
+
+            
+        <div class="search-container">
                 <div class="search-icon">🔍</div>
                 <input type="text" 
                        id="search-input"
@@ -641,6 +629,19 @@ try {
                 </div>
             </div>
         </div>
+        
+        <?php if ($message): ?>
+            <div class="alert success">
+                <?= $message ?>
+            </div>
+        <?php endif; ?>
+        
+        <?php if ($error): ?>
+            <div class="alert error">
+                <?= $error ?>
+            </div>
+        <?php endif; ?>
+
         <!-- Lista de Produtos -->
         <div class="form-section">
             <h2>📋 Produtos Cadastrados (<span id="total-count"><?= count($produtos) ?></span>)</h2>
