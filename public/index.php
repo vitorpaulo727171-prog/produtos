@@ -1,106 +1,26 @@
 <?php
-// Configurações do banco
-$db_config = [
-    'host' => getenv('MYSQL_HOST') ?: 'trolley.proxy.rlwy.net',
-    'port' => getenv('MYSQL_PORT') ?: '52398',
-    'user' => getenv('MYSQL_USER') ?: 'root',
-    'pass' => getenv('MYSQL_PASSWORD') ?: 'ZefFlJwoGgbGclwcSyOeZuvMGVqmhvtH',
-    'name' => getenv('MYSQL_DATABASE') ?: 'railway'
-];
+// ... (código anterior permanece igual)
 
-// Conexão com banco
-try {
-    $dsn = "mysql:host={$db_config['host']};port={$db_config['port']};dbname={$db_config['name']};charset=utf8mb4";
-    $pdo = new PDO($dsn, $db_config['user'], $db_config['pass'], [
-        PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION
-    ]);
-} catch (PDOException $e) {
-    die("Erro de conexão: " . $e->getMessage());
-}
-
-// Processar formulário
-$message = '';
-$error = '';
-$editing_product = null;
-
-// Verificar se é uma requisição POST e se existe action
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
-    $action = $_POST['action'];
-    
-    // Ação: Adicionar produto
-    if ($action === 'add') {
-        $nome = trim($_POST['nome'] ?? '');
-        $descricao = trim($_POST['descricao'] ?? '');
-        $preco = $_POST['preco'] ?? '';
-        $estoque = $_POST['estoque'] ?? '';
-        
-        if ($nome && is_numeric($preco) && is_numeric($estoque)) {
-            try {
-                $stmt = $pdo->prepare("INSERT INTO produtos_pronta_entrega (nome, descricao, preco, estoque) VALUES (?, ?, ?, ?)");
-                $stmt->execute([$nome, $descricao, floatval($preco), intval($estoque)]);
-                $message = "✅ Produto adicionado com sucesso!";
-            } catch (Exception $e) {
-                $error = "❌ Erro ao adicionar produto: " . $e->getMessage();
-            }
-        } else {
-            $error = "❌ Preencha todos os campos obrigatórios corretamente!";
-        }
-    }
-
-    // Ação: Atualizar produto
-    if ($action === 'update') {
-        $id = $_POST['id'] ?? '';
-        $nome = trim($_POST['nome'] ?? '');
-        $descricao = trim($_POST['descricao'] ?? '');
-        $preco = $_POST['preco'] ?? '';
-        $estoque = $_POST['estoque'] ?? '';
-        
-        if ($id && $nome && is_numeric($preco) && is_numeric($estoque)) {
-            try {
-                $stmt = $pdo->prepare("UPDATE produtos_pronta_entrega SET nome = ?, descricao = ?, preco = ?, estoque = ? WHERE id = ?");
-                $stmt->execute([$nome, $descricao, floatval($preco), intval($estoque), intval($id)]);
-                $message = "✅ Produto atualizado com sucesso!";
-            } catch (Exception $e) {
-                $error = "❌ Erro ao atualizar produto: " . $e->getMessage();
-            }
-        } else {
-            $error = "❌ Preencha todos os campos obrigatórios!";
-        }
-    }
-
-    // Ação: Excluir produto
-    if ($action === 'delete') {
-        $id = $_POST['id'] ?? '';
-        if ($id) {
-            try {
-                $stmt = $pdo->prepare("DELETE FROM produtos_pronta_entrega WHERE id = ?");
-                $stmt->execute([intval($id)]);
-                $message = "✅ Produto excluído com sucesso!";
-            } catch (Exception $e) {
-                $error = "❌ Erro ao excluir produto: " . $e->getMessage();
-            }
-        }
-    }
-}
-
-// Carregar produto para edição (apenas se não for uma submissão de formulário)
-if (!$message && !$error && isset($_GET['edit'])) {
-    $id = $_GET['edit'];
+// Processar pesquisa
+$search_term = '';
+if (isset($_GET['search']) && !empty(trim($_GET['search']))) {
+    $search_term = trim($_GET['search']);
     try {
-        $stmt = $pdo->prepare("SELECT * FROM produtos_pronta_entrega WHERE id = ?");
-        $stmt->execute([intval($id)]);
-        $editing_product = $stmt->fetch();
+        $stmt = $pdo->prepare("SELECT * FROM produtos_pronta_entrega WHERE nome LIKE ? OR descricao LIKE ? ORDER BY id DESC");
+        $stmt->execute(["%$search_term%", "%$search_term%"]);
+        $produtos = $stmt->fetchAll();
     } catch (Exception $e) {
-        $error = "❌ Erro ao carregar produto: " . $e->getMessage();
+        $error = "❌ Erro na pesquisa: " . $e->getMessage();
+        $produtos = [];
     }
-}
-
-// Buscar produtos
-try {
-    $produtos = $pdo->query("SELECT * FROM produtos_pronta_entrega ORDER BY id DESC")->fetchAll();
-} catch (Exception $e) {
-    $error = "❌ Erro ao carregar produtos: " . $e->getMessage();
-    $produtos = [];
+} else {
+    // Buscar produtos (código original)
+    try {
+        $produtos = $pdo->query("SELECT * FROM produtos_pronta_entrega ORDER BY id DESC")->fetchAll();
+    } catch (Exception $e) {
+        $error = "❌ Erro ao carregar produtos: " . $e->getMessage();
+        $produtos = [];
+    }
 }
 ?>
 <!DOCTYPE html>
@@ -140,6 +60,29 @@ try {
             margin-bottom: 25px;
             padding-bottom: 15px;
             border-bottom: 1px solid #e9ecef;
+            position: relative;
+        }
+        
+        .back-button {
+            position: absolute;
+            left: 0;
+            top: 0;
+            background: #6c757d;
+            color: white;
+            padding: 10px 15px;
+            border-radius: 6px;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 0.9rem;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            transition: all 0.3s;
+        }
+        
+        .back-button:hover {
+            background: #5a6268;
+            transform: translateX(-2px);
         }
         
         .header h1 {
@@ -147,11 +90,81 @@ try {
             font-size: 1.8rem;
             margin-bottom: 8px;
             line-height: 1.2;
+            padding: 0 60px;
         }
         
         .header p {
             color: #666;
             font-size: 0.9rem;
+        }
+        
+        .search-container {
+            margin: 20px 0;
+            position: relative;
+        }
+        
+        .search-input {
+            width: 100%;
+            padding: 14px 50px 14px 45px;
+            border: 2px solid #e9ecef;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: border-color 0.3s;
+            background: #f8f9fa;
+        }
+        
+        .search-input:focus {
+            outline: none;
+            border-color: #667eea;
+            background: white;
+        }
+        
+        .search-icon {
+            position: absolute;
+            left: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #6c757d;
+            font-size: 1.1rem;
+        }
+        
+        .search-actions {
+            position: absolute;
+            right: 10px;
+            top: 50%;
+            transform: translateY(-50%);
+            display: flex;
+            gap: 5px;
+        }
+        
+        .search-btn {
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            padding: 8px 12px;
+            cursor: pointer;
+            font-size: 0.8rem;
+            transition: background 0.3s;
+        }
+        
+        .search-btn:hover {
+            background: #5a6fd8;
+        }
+        
+        .clear-btn {
+            background: #6c757d;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            padding: 8px 12px;
+            cursor: pointer;
+            font-size: 0.8rem;
+            transition: background 0.3s;
+        }
+        
+        .clear-btn:hover {
+            background: #5a6268;
         }
         
         .alert {
@@ -206,7 +219,7 @@ try {
             margin: 4px 0; 
             border: 2px solid #e9ecef;
             border-radius: 8px;
-            font-size: 16px; /* Prevent zoom on iOS */
+            font-size: 16px;
             transition: border-color 0.3s;
             -webkit-appearance: none;
         }
@@ -262,7 +275,7 @@ try {
             width: 100%; 
             border-collapse: collapse; 
             background: white;
-            min-width: 380px; /* Minimum table width for mobile */
+            min-width: 380px;
         }
         
         th, td { 
@@ -308,8 +321,20 @@ try {
             font-size: 0.8rem;
         }
         
+        .search-results-info {
+            background: #e7f3ff;
+            color: #0066cc;
+            padding: 10px 15px;
+            border-radius: 6px;
+            margin-bottom: 15px;
+            font-size: 0.9rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
         .form-row {
-            display: block; /* Stack on mobile */
+            display: block;
         }
         
         .button-group {
@@ -333,6 +358,12 @@ try {
             
             .header h1 {
                 font-size: 1.6rem;
+                padding: 0 50px;
+            }
+            
+            .back-button {
+                padding: 8px 12px;
+                font-size: 0.8rem;
             }
             
             .form-section {
@@ -345,7 +376,7 @@ try {
             
             input, textarea {
                 padding: 12px;
-                font-size: 16px; /* Prevent zoom */
+                font-size: 16px;
             }
             
             .btn {
@@ -356,6 +387,10 @@ try {
             th, td {
                 padding: 10px 8px;
                 font-size: 0.8rem;
+            }
+            
+            .search-input {
+                padding: 12px 45px 12px 40px;
             }
         }
         
@@ -408,6 +443,7 @@ try {
             
             .header h1 {
                 font-size: 1.4rem;
+                padding: 0 40px;
             }
             
             .form-section {
@@ -439,7 +475,7 @@ try {
             }
             
             input, textarea {
-                font-size: 16px; /* Prevent zoom on focus */
+                font-size: 16px;
             }
         }
     </style>
@@ -447,8 +483,31 @@ try {
 <body>
     <div class="container">
         <div class="header">
+            <a href="https://msapp.rf.gd" class="back-button">
+                ← Voltar
+            </a>
             <h1>🛍️ Mercado dos Sabores</h1>
             <p>Gerenciamento de Produtos</p>
+            
+            <!-- Barra de Pesquisa -->
+            <div class="search-container">
+                <form method="GET" action="">
+                    <div class="search-icon">🔍</div>
+                    <input type="text" 
+                           name="search" 
+                           class="search-input" 
+                           placeholder="Pesquisar produtos por nome ou descrição..." 
+                           value="<?= htmlspecialchars($search_term) ?>">
+                    <div class="search-actions">
+                        <?php if ($search_term): ?>
+                            <button type="submit" class="search-btn">Buscar</button>
+                            <a href="?" class="clear-btn">Limpar</a>
+                        <?php else: ?>
+                            <button type="submit" class="search-btn">Buscar</button>
+                        <?php endif; ?>
+                    </div>
+                </form>
+            </div>
         </div>
         
         <?php if ($message): ?>
@@ -460,6 +519,13 @@ try {
         <?php if ($error): ?>
             <div class="alert error">
                 <?= $error ?>
+            </div>
+        <?php endif; ?>
+
+        <?php if ($search_term): ?>
+            <div class="search-results-info">
+                <span>🔍 Resultados da pesquisa por: "<strong><?= htmlspecialchars($search_term) ?></strong>"</span>
+                <span><?= count($produtos) ?> produto(s) encontrado(s)</span>
             </div>
         <?php endif; ?>
 
@@ -519,7 +585,7 @@ try {
             
             <?php if (empty($produtos)): ?>
                 <p style="text-align: center; color: #6c757d; padding: 30px;">
-                    Nenhum produto cadastrado.
+                    <?= $search_term ? 'Nenhum produto encontrado para sua pesquisa.' : 'Nenhum produto cadastrado.' ?>
                 </p>
             <?php else: ?>
                 <div class="table-container">
@@ -551,7 +617,7 @@ try {
                                 </td>
                                 <td>
                                     <div class="actions">
-                                        <a href="?edit=<?= $produto['id'] ?>" class="btn btn-warning btn-sm">
+                                        <a href="?edit=<?= $produto['id'] ?><?= $search_term ? '&search=' . urlencode($search_term) : '' ?>" class="btn btn-warning btn-sm">
                                             ✏️
                                         </a>
                                         <form method="POST" style="display: inline;">
