@@ -1,4 +1,5 @@
 <?php
+// Configurações do banco
 $db_config = [
     'host' => getenv('MYSQL_HOST') ?: 'trolley.proxy.rlwy.net',
     'port' => getenv('MYSQL_PORT') ?: '52398',
@@ -100,27 +101,6 @@ try {
 } catch (Exception $e) {
     $error = "❌ Erro ao carregar produtos: " . $e->getMessage();
     $produtos = [];
-}
-// Processar pesquisa
-$search_term = '';
-if (isset($_GET['search']) && !empty(trim($_GET['search']))) {
-    $search_term = trim($_GET['search']);
-    try {
-        $stmt = $pdo->prepare("SELECT * FROM produtos_pronta_entrega WHERE nome LIKE ? OR descricao LIKE ? ORDER BY id DESC");
-        $stmt->execute(["%$search_term%", "%$search_term%"]);
-        $produtos = $stmt->fetchAll();
-    } catch (Exception $e) {
-        $error = "❌ Erro na pesquisa: " . $e->getMessage();
-        $produtos = [];
-    }
-} else {
-    // Buscar produtos (código original)
-    try {
-        $produtos = $pdo->query("SELECT * FROM produtos_pronta_entrega ORDER BY id DESC")->fetchAll();
-    } catch (Exception $e) {
-        $error = "❌ Erro ao carregar produtos: " . $e->getMessage();
-        $produtos = [];
-    }
 }
 ?>
 <!DOCTYPE html>
@@ -235,21 +215,6 @@ if (isset($_GET['search']) && !empty(trim($_GET['search']))) {
             transform: translateY(-50%);
             display: flex;
             gap: 5px;
-        }
-        
-        .search-btn {
-            background: #667eea;
-            color: white;
-            border: none;
-            border-radius: 6px;
-            padding: 8px 12px;
-            cursor: pointer;
-            font-size: 0.8rem;
-            transition: background 0.3s;
-        }
-        
-        .search-btn:hover {
-            background: #5a6fd8;
         }
         
         .clear-btn {
@@ -433,6 +398,13 @@ if (isset($_GET['search']) && !empty(trim($_GET['search']))) {
             align-items: center;
         }
         
+        .no-results {
+            text-align: center;
+            color: #6c757d;
+            padding: 30px;
+            font-style: italic;
+        }
+        
         .form-row {
             display: block;
         }
@@ -591,22 +563,15 @@ if (isset($_GET['search']) && !empty(trim($_GET['search']))) {
             
             <!-- Barra de Pesquisa -->
             <div class="search-container">
-                <form method="GET" action="">
-                    <div class="search-icon">🔍</div>
-                    <input type="text" 
-                           name="search" 
-                           class="search-input" 
-                           placeholder="Pesquisar produtos por nome ou descrição..." 
-                           value="<?= htmlspecialchars($search_term) ?>">
-                    <div class="search-actions">
-                        <?php if ($search_term): ?>
-                            <button type="submit" class="search-btn">Buscar</button>
-                            <a href="?" class="clear-btn">Limpar</a>
-                        <?php else: ?>
-                            <button type="submit" class="search-btn">Buscar</button>
-                        <?php endif; ?>
-                    </div>
-                </form>
+                <div class="search-icon">🔍</div>
+                <input type="text" 
+                       id="search-input"
+                       class="search-input" 
+                       placeholder="Pesquisar produtos por nome ou descrição..." 
+                       autocomplete="off">
+                <div class="search-actions">
+                    <button type="button" id="clear-search" class="clear-btn" style="display: none;">Limpar</button>
+                </div>
             </div>
         </div>
         
@@ -622,12 +587,10 @@ if (isset($_GET['search']) && !empty(trim($_GET['search']))) {
             </div>
         <?php endif; ?>
 
-        <?php if ($search_term): ?>
-            <div class="search-results-info">
-                <span>🔍 Resultados da pesquisa por: "<strong><?= htmlspecialchars($search_term) ?></strong>"</span>
-                <span><?= count($produtos) ?> produto(s) encontrado(s)</span>
-            </div>
-        <?php endif; ?>
+        <div class="search-results-info" id="search-info" style="display: none;">
+            <span id="search-text">🔍 Resultados da pesquisa</span>
+            <span id="search-count">0 produto(s) encontrado(s)</span>
+        </div>
 
         <!-- Formulário de Adicionar/Editar Produto -->
         <div class="form-section">
@@ -681,65 +644,143 @@ if (isset($_GET['search']) && !empty(trim($_GET['search']))) {
 
         <!-- Lista de Produtos -->
         <div class="form-section">
-            <h2>📋 Produtos Cadastrados (<?= count($produtos) ?>)</h2>
+            <h2>📋 Produtos Cadastrados (<span id="total-count"><?= count($produtos) ?></span>)</h2>
             
-            <?php if (empty($produtos)): ?>
-                <p style="text-align: center; color: #6c757d; padding: 30px;">
-                    <?= $search_term ? 'Nenhum produto encontrado para sua pesquisa.' : 'Nenhum produto cadastrado.' ?>
-                </p>
-            <?php else: ?>
-                <div class="table-container">
-                    <table>
-                        <thead>
-                            <tr>
-                                <th>ID</th>
-                                <th>Nome</th>
-                                <th>Preço</th>
-                                <th>Estoque</th>
-                                <th>Ações</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <?php foreach ($produtos as $produto): ?>
-                            <tr>
-                                <td><strong>#<?= $produto['id'] ?></strong></td>
-                                <td>
-                                    <strong><?= htmlspecialchars($produto['nome']) ?></strong>
-                                    <?php if (!empty($produto['descricao'])): ?>
-                                        <br><small style="color: #666;"><?= htmlspecialchars($produto['descricao']) ?></small>
-                                    <?php endif; ?>
-                                </td>
-                                <td><strong>R$ <?= number_format($produto['preco'], 2, ',', '.') ?></strong></td>
-                                <td>
-                                    <span class="<?= $produto['estoque'] > 0 ? 'stock-ok' : 'stock-low' ?>">
-                                        <?= $produto['estoque'] ?> un
-                                    </span>
-                                </td>
-                                <td>
-                                    <div class="actions">
-                                        <a href="?edit=<?= $produto['id'] ?><?= $search_term ? '&search=' . urlencode($search_term) : '' ?>" class="btn btn-warning btn-sm">
-                                            ✏️
-                                        </a>
-                                        <form method="POST" style="display: inline;">
-                                            <input type="hidden" name="action" value="delete">
-                                            <input type="hidden" name="id" value="<?= $produto['id'] ?>">
-                                            <button type="submit" class="btn btn-danger btn-sm" 
-                                                    onclick="return confirm('Excluir <?= htmlspecialchars($produto['nome']) ?>?')">
-                                                🗑️
-                                            </button>
-                                        </form>
-                                    </div>
-                                </td>
-                            </tr>
-                            <?php endforeach; ?>
-                        </tbody>
-                    </table>
-                </div>
-            <?php endif; ?>
+            <div id="produtos-container">
+                <?php if (empty($produtos)): ?>
+                    <p class="no-results">
+                        Nenhum produto cadastrado.
+                    </p>
+                <?php else: ?>
+                    <div class="table-container">
+                        <table id="produtos-table">
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Nome</th>
+                                    <th>Preço</th>
+                                    <th>Estoque</th>
+                                    <th>Ações</th>
+                                </tr>
+                            </thead>
+                            <tbody id="produtos-body">
+                                <?php foreach ($produtos as $produto): ?>
+                                <tr class="produto-item" data-nome="<?= htmlspecialchars(strtolower($produto['nome'])) ?>" data-descricao="<?= htmlspecialchars(strtolower($produto['descricao'] ?? '')) ?>">
+                                    <td><strong>#<?= $produto['id'] ?></strong></td>
+                                    <td>
+                                        <strong><?= htmlspecialchars($produto['nome']) ?></strong>
+                                        <?php if (!empty($produto['descricao'])): ?>
+                                            <br><small style="color: #666;"><?= htmlspecialchars($produto['descricao']) ?></small>
+                                        <?php endif; ?>
+                                    </td>
+                                    <td><strong>R$ <?= number_format($produto['preco'], 2, ',', '.') ?></strong></td>
+                                    <td>
+                                        <span class="<?= $produto['estoque'] > 0 ? 'stock-ok' : 'stock-low' ?>">
+                                            <?= $produto['estoque'] ?> un
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <div class="actions">
+                                            <a href="?edit=<?= $produto['id'] ?>" class="btn btn-warning btn-sm">
+                                                ✏️
+                                            </a>
+                                            <form method="POST" style="display: inline;">
+                                                <input type="hidden" name="action" value="delete">
+                                                <input type="hidden" name="id" value="<?= $produto['id'] ?>">
+                                                <button type="submit" class="btn btn-danger btn-sm" 
+                                                        onclick="return confirm('Excluir <?= htmlspecialchars($produto['nome']) ?>?')">
+                                                    🗑️
+                                                </button>
+                                            </form>
+                                        </div>
+                                    </td>
+                                </tr>
+                                <?php endforeach; ?>
+                            </tbody>
+                        </table>
+                    </div>
+                <?php endif; ?>
+            </div>
         </div>
     </div>
 
     <script>
+        // Busca automática em tempo real
+        document.addEventListener('DOMContentLoaded', function() {
+            const searchInput = document.getElementById('search-input');
+            const clearSearch = document.getElementById('clear-search');
+            const searchInfo = document.getElementById('search-info');
+            const searchText = document.getElementById('search-text');
+            const searchCount = document.getElementById('search-count');
+            const totalCount = document.getElementById('total-count');
+            const produtosBody = document.getElementById('produtos-body');
+            const produtoItems = document.querySelectorAll('.produto-item');
+            const tableContainer = document.querySelector('.table-container');
+            
+            // Mostrar/ocultar botão limpar
+            searchInput.addEventListener('input', function() {
+                clearSearch.style.display = this.value ? 'block' : 'none';
+                filterProducts(this.value.toLowerCase());
+            });
+            
+            // Botão limpar
+            clearSearch.addEventListener('click', function() {
+                searchInput.value = '';
+                clearSearch.style.display = 'none';
+                filterProducts('');
+                searchInput.focus();
+            });
+            
+            // Função de filtro
+            function filterProducts(searchTerm) {
+                let visibleCount = 0;
+                
+                if (produtoItems.length === 0) return;
+                
+                produtoItems.forEach(item => {
+                    const nome = item.getAttribute('data-nome');
+                    const descricao = item.getAttribute('data-descricao');
+                    
+                    const matches = nome.includes(searchTerm) || descricao.includes(searchTerm);
+                    
+                    if (matches) {
+                        item.style.display = '';
+                        visibleCount++;
+                    } else {
+                        item.style.display = 'none';
+                    }
+                });
+                
+                // Atualizar informações da busca
+                if (searchTerm) {
+                    searchText.textContent = `🔍 Resultados da pesquisa por: "${searchTerm}"`;
+                    searchCount.textContent = `${visibleCount} produto(s) encontrado(s)`;
+                    searchInfo.style.display = 'flex';
+                    totalCount.textContent = visibleCount;
+                } else {
+                    searchInfo.style.display = 'none';
+                    totalCount.textContent = produtoItems.length;
+                }
+                
+                // Mostrar mensagem se não houver resultados
+                const noResults = document.querySelector('.no-results');
+                if (visibleCount === 0 && searchTerm) {
+                    if (!noResults) {
+                        const noResultsMsg = document.createElement('p');
+                        noResultsMsg.className = 'no-results';
+                        noResultsMsg.textContent = `Nenhum produto encontrado para "${searchTerm}".`;
+                        produtosBody.innerHTML = '';
+                        produtosBody.appendChild(noResultsMsg);
+                    }
+                }
+            }
+            
+            // Focar no campo de busca quando carregar a página
+            setTimeout(() => {
+                searchInput.focus();
+            }, 100);
+        });
+
         // Auto-remove mensagens após 5 segundos
         setTimeout(() => {
             const alerts = document.querySelectorAll('.alert');
@@ -754,10 +795,12 @@ if (isset($_GET['search']) && !empty(trim($_GET['search']))) {
             });
         }, 5000);
 
-        // Focar no campo nome quando carregar a página
+        // Focar no campo nome quando carregar a página (se não estiver editando)
         document.addEventListener('DOMContentLoaded', function() {
             const nomeField = document.getElementById('nome');
-            if (nomeField && !nomeField.value) {
+            const searchInput = document.getElementById('search-input');
+            
+            if (nomeField && !nomeField.value && !searchInput.value) {
                 nomeField.focus();
             }
         });
